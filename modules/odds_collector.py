@@ -31,7 +31,17 @@ def get_upcoming_matches():
             
             log_step("ODDS_API", "SUCCESS", f"Got {len(matches)} matches for {sport_key}") # Log the successful fetching of matches
             all_matches.extend(matches) # Add the matches to the overall list
+            
+        except requests.exceptions.HTTPError as http_err:
+            log_step("ODDS_API", "FAILURE", f"HTTP error occurred for {sport_key}: {http_err}") # Log HTTP errors
+            
+        except requests.exceptions.RequestException as req_err:
+            log_step("ODDS_API", "FAILURE", f"Request error occurred for {sport_key}: {req_err}") # Log request errors (e.g., connection issues, timeouts)
+        
+        except requests.exceptions.ConnectionError:
+            log_step("ODDS_API","FAILURE", "No Internet Connection")
+            
         except Exception as e:
-            log_step("ODDS_API", "ERROR", f"Unexpected Error: {sport_key}: {e}") # Log any errors that occur while fetching matches
+            log_step("ODDS_API", "FAILURE", f"Unexpected Error: {sport_key}: {e}") # Log any errors that occur while fetching matches
             
     return all_matches # Return the list of all upcoming matches across the specified sports    
