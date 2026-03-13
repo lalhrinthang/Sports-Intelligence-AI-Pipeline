@@ -10,3 +10,20 @@ logging.basicConfig(
         logging.StreamHandler() # Also log to the console
     ]
 )
+
+logger = logging.getLogger('SyndicatePipeline') # Create a logger for the syndicate pipeline
+
+def log_step(step_name,status,details=""):
+    """
+    Logs the execution of a step in the pipeline.
+    
+    Parameters:
+    - step_name: Name of the step being logged
+    - status: Status of the step (e.g., 'STARTED', 'COMPLETED', 'FAILED')
+    - details: Additional details about the step
+    """
+    timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S') # Get current timestamp
+    
+    message = f"{timestamp} | [{step_name}] | Status: {status} | {details}" # Format log message
+    
+    logger.info(message) # Log the message at INFO level
