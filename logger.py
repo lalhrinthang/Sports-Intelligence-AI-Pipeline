@@ -25,5 +25,9 @@ def log_step(step_name,status,details=""):
     timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S') # Get current timestamp
     
     message = f"{timestamp} | [{step_name}] | Status: {status} | {details}" # Format log message
-    
-    logger.info(message) # Log the message at INFO level
+    if status == 'FAILED':
+        logger.error(message) # Log the message at ERROR level if the step failed
+    elif status == 'SUCCESS':
+        logger.info(message) # Log the message at INFO level if the step completed successfully 
+    else:
+        logger.info(message) # Log the message at INFO level for other statuses (e.g., STARTED)
