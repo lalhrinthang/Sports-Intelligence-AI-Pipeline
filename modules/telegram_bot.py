@@ -34,3 +34,14 @@ def send_intelligence_report(verdict,reason,confidence,match_id):
                 """
     send_alert(report) # Send the formatted intelligence report as an alert
     
+def send_pipeline_failure(step, error_message):
+    """Send an alert when something goes wrong."""
+    alert = f"""
+⚠️ <b>PIPELINE FAILURE</b>
+
+🔴 <b>Step:</b> {step}
+❌ <b>Error:</b> {error_message}
+
+Manual intervention required.
+    """
+    send_alert(alert)
