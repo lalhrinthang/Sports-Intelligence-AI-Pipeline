@@ -14,3 +14,10 @@ async def _send_message(text):
     bot = Bot(token=BOT_TOKEN)
     await bot.send_message(chat_id=CHAT_ID, text=text, parse_mode="HTML") # Send a message to the specified chat ID and parse it as HTML
 
+def send_alert(message):
+    try:
+        asyncio.run(_send_message(message)) # Run the async function to send the message
+        log_step("Telegram", "SUCCESS", f"Message sent: {message[:50]}") # Log the successful sending of the message, including a preview of the message content
+    except Exception as error:
+        log_step("Telegram", "FAILED", f"Cound not send message: {str(error)}") # Log any errors that occur while trying to send the message
+    
