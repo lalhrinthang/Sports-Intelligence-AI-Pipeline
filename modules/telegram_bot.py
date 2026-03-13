@@ -20,4 +20,17 @@ def send_alert(message):
         log_step("Telegram", "SUCCESS", f"Message sent: {message[:50]}") # Log the successful sending of the message, including a preview of the message content
     except Exception as error:
         log_step("Telegram", "FAILED", f"Cound not send message: {str(error)}") # Log any errors that occur while trying to send the message
+
+def send_intelligence_report(verdict,reason,confidence,match_id):
+    """Send a formatted V3 Intelligence Report."""
+    report = f"""
+                🧠 <b>V3 INTELLIGENCE REPORT</b>
+
+                📋 <b>Match ID:</b> {match_id}
+                ⚖️ <b>Verdict:</b> {verdict}
+                📊 <b>Confidence:</b> {confidence}%
+                💡 <b>Reason:</b> {reason}
+                
+                """
+    send_alert(report) # Send the formatted intelligence report as an alert
     
