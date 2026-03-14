@@ -3,8 +3,10 @@ import json
 import google.generativeai as genai
 from dotenv import load_dotenv
 from logger import log_step
-from google.generativeai.types import Tool
-from google.generativeai.types.content_types import GoogleSearch
+# Free tier has limits. Fix: Add a delay between calls
+import time
+time.sleep(2)  # Wait 2 seconds before calling Gemini
+
 load_dotenv()
 
 # Configure Gemini with our API key
@@ -52,8 +54,7 @@ def collect_match_insights(match_data:dict) -> dict | None:
             return None
         try:
             model = genai.GenerativeModel(
-                model_name="gemini-1.5-pro"
-                tools=[Tool(google_search_retrieval=GoogleSearchRetrieval())] # Add the Google Search tool to Gemini Pro
+                model_name="gemini-2.5-flash"
             )
             log_step("GEMINI", "CALLING API", "Sending prompt to Gemini Pro API")
             # Send the prompt to Gemini Pro and get the response
