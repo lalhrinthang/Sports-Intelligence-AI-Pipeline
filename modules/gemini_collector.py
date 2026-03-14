@@ -63,7 +63,13 @@ def load_prompt(match_data: dict) -> str:
             raw_text = response.text.strip()
             log_step("GEMINI", "RESPONSE RECEIVED", f"Got {len(raw_text)} characters back")
             
+            clean_text = clean_json_response(raw_text)
             
+            insights = json.loads(clean_text) 
+            
+            log_step("GEMINI", "SUCCESS", f"Successfully collected insights for match (ID: {match_id})")
+            
+            return insights
         except Exception as e:
             log_step("GEMINI", "FAILURE", f"Gemini API Error: {e}")
             return None
