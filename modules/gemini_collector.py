@@ -1,6 +1,8 @@
 import os
 import json
-import google.generativeai as genai
+# import google.generativeai as genai
+from google import genai
+from google.genai import types
 from dotenv import load_dotenv
 from logger import log_step
 # Free tier has limits. Fix: Add a delay between calls
@@ -10,30 +12,26 @@ time.sleep(2)  # Wait 2 seconds before calling Gemini
 load_dotenv()
 
 # Configure Gemini with our API key
-genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
-
+client = genai.Client(api_key=os.getenv("GENAI_API_KEY"))
 
 def load_prompt(match_data: dict) -> str:
     """ Read the prompt from gemini_hunter.txt and inject the match data into it. """
     try:
         with open("prompts/gemini_hunter.txt", "r") as f:
             prompt_template = f.read()
-            
-        # Convert the match data to a pretty-printed JSON string for better readability in the prompt
-        match_data_str = json.dumps(match_data, indent=2) # Convert match data to a pretty-printed JSON string
-        # Inject the match data into the prompt template
-        prompt = prompt_template.replace("{match_data}", match_data_str) # Inject the match data into the prompt template
+        match_data_str = json.dumps(match_data, indent=2) 
+        prompt = prompt_template.replace("{match_data}", match_data_str) 
         return prompt
     
     except FileNotFoundError:
-        log_step("GEMINI_COLLECTOR", "FAILURE", "Prompt file not found: prompts/gemini_hunter.txt") # Log if the prompt file is not found
+        log_step("GEMINI_COLLECTOR", "FAILURE", "Prompt file not found: prompts/gemini_hunter.txt") 
         return None
     
     except Exception as e:
-        log_step("GEMINI_COLLECTOR", "FAILURE", f"Error loading prompt: {e}") # Log any other errors that occur while loading the prompt
+        log_step("GEMINI_COLLECTOR", "FAILURE", f"Error loading prompt: {e}") 
         return None
     
-    # Main function to collect insights for a match
+# Main function to collect insights for a match
 def collect_match_insights(match_data:dict) -> dict | None: 
         """
         Send match data to Gemini Pro.
@@ -50,12 +48,21 @@ def collect_match_insights(match_data:dict) -> dict | None:
         prompt = load_prompt(match_data)
         
         if not prompt:
-            log_step("GEMINI_COLLECTOR", "FAILED", f"Failed to load prompt for match (ID: {match_id})") # Log if the prompt could not be loaded
+            log_step("GEMINI", "FAILED", f"Failed to load prompt for match (ID: {match_id})") # Log if the prompt could not be loaded
             return None
         try:
-            model = genai.GenerativeModel(
-                model_name="gemini-2.5-flash"
+            google_search_tool = types.Tool(
+                google_search = types.GoogleSearch()
             )
+            model = client.models.generate_content(
+                "gemini-2.5-flash", 
+                tools=[google_search_tool], 
+                config=types.GenerateContentConfig(
+                    tools=[google_search_tool],  
+                    thinking_config=types.ThinkingConfig(thinking_budget=1024)
+                )
+            )
+            
             log_step("GEMINI", "CALLING API", "Sending prompt to Gemini Pro API")
             # Send the prompt to Gemini Pro and get the response
             response = model.generate_content(prompt)
