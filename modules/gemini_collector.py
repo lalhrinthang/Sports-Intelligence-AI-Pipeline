@@ -55,8 +55,14 @@ def load_prompt(match_data: dict) -> str:
                 tools="google_search_retrival"
             )
             log_step("GEMINI", "CALLING API", "Sending prompt to Gemini Pro API")
+            # Send the prompt to Gemini Pro and get the response
             response = model.generate_content(prompt)
             log_step("GEMINI", "API RESPONSE RECEIVED", "Received response from Gemini Pro API")
+            
+            # Extract the JSON content from the response
+            raw_text = response.text.strip()
+            log_step("GEMINI", "RESPONSE RECEIVED", f"Got {len(raw_text)} characters back")
+            
             
         except Exception as e:
             log_step("GEMINI", "FAILURE", f"Gemini API Error: {e}")
