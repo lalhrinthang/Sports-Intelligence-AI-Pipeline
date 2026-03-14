@@ -24,14 +24,13 @@ def send_alert(message):
 def send_intelligence_report(verdict,reason,confidence,match_id):
     """Send a formatted V3 Intelligence Report."""
     report = f"""
-        🧠 <b>V3 INTELLIGENCE REPORT</b>
+🧠 <b>V3 INTELLIGENCE REPORT</b>
 
-        📋 <b>Match ID:</b> {match_id}
-        ⚖️ <b>Verdict:</b> {verdict}
-        📊 <b>Confidence:</b> {confidence}%
-        💡 <b>Reason:</b> {reason}
-                
-        """
+📋 <b>Match ID:</b> {match_id}
+⚖️ <b>Verdict:</b> {verdict}
+📊 <b>Confidence:</b> {confidence}%
+💡 <b>Reason:</b> {reason}            
+    """
     send_alert(report) # Send the formatted intelligence report as an alert
     
 def send_pipeline_failure(step, error_message):

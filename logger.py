@@ -1,12 +1,18 @@
 import logging
 from datetime import datetime # for timestamping log entries
+import sys
+import io
+
+# Force UTF-8 encoding for Windows console
+if sys.platform == 'win32':
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', newline='')
 
 # Configure logging
 logging.basicConfig(
     level=logging.INFO, # Set the logging level to INFO
     format='%(asctime)s | %(levelname)s | %(message)s', # Log format includes timestamp, log level, and message
     handlers=[
-        logging.FileHandler('logfile.txt'), # Log to a file named 'syndicate_pipeline.log'
+        logging.FileHandler('logfile.txt', encoding='utf-8'), # Log to file with UTF-8 encoding
         logging.StreamHandler() # Also log to the console
     ]
 )
@@ -24,7 +30,6 @@ def log_step(step_name,status,details=""):
     """
     timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S') # Get current timestamp
     
-    message = f"{timestamp} | [{step_name}] | Status: {status} | {details}" # Format log message
     if status == 'FAILED':
         logger.error(message) # Log the message at ERROR level if the step failed
     elif status == 'SUCCESS':
