@@ -67,3 +67,24 @@ def load_prompt(match_data: dict) -> str:
         except Exception as e:
             log_step("GEMINI", "FAILURE", f"Gemini API Error: {e}")
             return None
+        
+    def clean_json_response(text: str) -> str:
+        """
+        Remove markdown code fences if Gemini included them.
+
+        Example input:  ```json\n{...}\n```
+        Example output: {...}
+        """ 
+    # Remove ```json at the start
+        if text.startswith("```json"):
+            text = text[7:]
+
+        # Remove ``` at the start (without "json")
+        elif text.startswith("```"):
+            text = text[3:]
+
+        # Remove ``` at the end
+        if text.endswith("```"):
+            text = text[:-3]
+
+    return text.strip()
