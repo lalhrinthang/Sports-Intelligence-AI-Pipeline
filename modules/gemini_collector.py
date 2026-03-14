@@ -70,6 +70,12 @@ def load_prompt(match_data: dict) -> str:
             log_step("GEMINI", "SUCCESS", f"Successfully collected insights for match (ID: {match_id})")
             
             return insights
+        except json.JSONDecodeError as json_err:
+            log_step("GEMINI", "FAILURE", f"JSON decoding error for match (ID: {match_id}): {json_err}")
+            
+            log_step("GEMINI", "RAW RESPONSE", f"Raw response was: {raw_text[:300]}")
+            
+            return None
         except Exception as e:
             log_step("GEMINI", "FAILURE", f"Gemini API Error: {e}")
             return None
