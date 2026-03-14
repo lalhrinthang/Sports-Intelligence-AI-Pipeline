@@ -54,7 +54,10 @@ def load_prompt(match_data: dict) -> str:
                 model_name="gemini-1.5-pro",
                 tools="google_search_retrival"
             )
-        
+            log_step("GEMINI", "CALLING API", "Sending prompt to Gemini Pro API")
+            response = model.generate_content(prompt)
+            log_step("GEMINI", "API RESPONSE RECEIVED", "Received response from Gemini Pro API")
+            
         except Exception as e:
             log_step("GEMINI", "FAILURE", f"Gemini API Error: {e}")
             return None
