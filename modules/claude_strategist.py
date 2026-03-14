@@ -67,7 +67,7 @@ def run_v3_audit(validated_data: MatchData):
         # Call the Anthropic API with the prepared prompt
         log_step("CLAUDE", "RUNNING", "Sending request to Anthropic API...")
         
-        response = client.completions.create(
+        response = client.messages.create(
             model="claude-haiku-4-5",
             max_tokens=1024,
             messages=[
@@ -111,14 +111,14 @@ def run_v3_audit(validated_data: MatchData):
         return None
     
 def run_v3_audit_sonnet_fallback(
-        validated_data: MatchIntelligence) -> dict | None:
+        validated_data: MatchData) -> dict | None:
     """
     Fallback to Claude Sonnet if Haiku fails.
     More affordable but less reliable.
     """
 
     log_step("CLAUDE", "FALLBACK",
-             "Sonnet failed — trying Claude Haiku...")
+             "Haiku failed — trying Claude Sonnet...")
 
     prompt = load_prompt(validated_data)
     if not prompt:

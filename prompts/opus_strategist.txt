@@ -41,6 +41,6 @@ OUTPUT THIS EXACT JSON SCHEMA:
 {
   "match_id": "string",
   "verdict": "string — your betting recommendation",
-  "reason": "string — detailed explanation referencing the 4 pillars",
+  "reason": "string — summary explanation or conclusion explanation referencing the 4 pillars",
   "confidence": number — integer between 0 and 100
 }

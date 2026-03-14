@@ -1,4 +1,10 @@
-from pydantic import BaseModel, ValidationError, validator
+from pydantic import BaseModel, ValidationError, field_validator
+import os
+import sys
+
+# Add parent directory to path for imports
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
 from logger import log_step
 
 class MatchData(BaseModel):
@@ -9,20 +15,29 @@ class MatchData(BaseModel):
     weather: str
     public_sentiment: str
     
-    @validator('*', pre=True) # Validate that all fields are non-empty strings
-    def field_must_be_empty(cls,value,field):
+    @field_validator('*', mode='before')
+    @classmethod
+    def field_must_not_be_empty(cls, value):
         if not isinstance(value, str) or not value.strip():
-            raise ValueError(f"{field.name} must be a non-empty string")
+            raise ValueError("Field must be a non-empty string")
         return value
     
-    @validator('*')
-    def warn_if_unavailable(cls, value, field):
+    @field_validator('*', mode='after')
+    @classmethod
+    def warn_if_unavailable(cls, value):
         if value == "Data Unavailable":
-            log_step("VALIDATION", "WARNING", f"{field.name} is marked as 'Data Unavailable'. This may impact the quality of insights.")
-            return value
+            log_step("VALIDATION", "WARNING", "Field is marked as 'Data Unavailable'. This may impact the quality of insights.")
+        return value
 
-def validate_match_data(raw_data: dict) -> MatchData | None:
-    
+def validate_match_data(raw_data: dict):
+    """
+    Validate Gemini's JSON against our schema.
+
+    Returns:
+        (validated_object, None)    → if PASS
+        (None, error_string)        → if FAIL
+        
+    """
     log_step("VALIDATION","RUNNING", f"Checking {len(raw_data)} fieldss for match data validity")
     
     try:
@@ -30,7 +45,7 @@ def validate_match_data(raw_data: dict) -> MatchData | None:
         
         log_step("VALIDATION", "SUCCESS", f"All fields valid for match: {validated.match_id}")
         
-        return validated
+        return validated , None
     
     except ValidationError as e:
         error_messages = []
