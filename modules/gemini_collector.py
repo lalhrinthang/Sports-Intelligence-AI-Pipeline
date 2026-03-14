@@ -3,7 +3,8 @@ import json
 import google.generativeai as genai
 from dotenv import load_dotenv
 from logger import log_step
-
+from google.generativeai.types import Tool
+from google.generativeai.types.content_types import GoogleSearch
 load_dotenv()
 
 # Configure Gemini with our API key
@@ -31,7 +32,7 @@ def load_prompt(match_data: dict) -> str:
         return None
     
     # Main function to collect insights for a match
-    def collect_match_insights(match_data:dict) -> dict | None: 
+def collect_match_insights(match_data:dict) -> dict | None: 
         """
         Send match data to Gemini Pro.
         Gemini searches the web and returns a rich JSON.
@@ -51,8 +52,8 @@ def load_prompt(match_data: dict) -> str:
             return None
         try:
             model = genai.GenerativeModel(
-                model_name="gemini-1.5-pro",
-                tools="google_search_retrival"
+                model_name="gemini-1.5-pro"
+                tools=[Tool(google_search_retrieval=GoogleSearchRetrieval())] # Add the Google Search tool to Gemini Pro
             )
             log_step("GEMINI", "CALLING API", "Sending prompt to Gemini Pro API")
             # Send the prompt to Gemini Pro and get the response
@@ -80,23 +81,23 @@ def load_prompt(match_data: dict) -> str:
             log_step("GEMINI", "FAILURE", f"Gemini API Error: {e}")
             return None
         
-    def clean_json_response(text: str) -> str:
-        """
+def clean_json_response(text: str) -> str:
+    """
         Remove markdown code fences if Gemini included them.
 
         Example input:  ```json\n{...}\n```
         Example output: {...}
-        """ 
+    """ 
     # Remove ```json at the start
-        if text.startswith("```json"):
-            text = text[7:]
+    if text.startswith("```json"):
+        text = text[7:]
 
         # Remove ``` at the start (without "json")
-        elif text.startswith("```"):
-            text = text[3:]
+    elif text.startswith("```"):
+        text = text[3:]
 
         # Remove ``` at the end
-        if text.endswith("```"):
-            text = text[:-3]
+    if text.endswith("```"):
+        text = text[:-3]
 
     return text.strip()
