@@ -62,6 +62,13 @@ def get_match_odds(sport_key, match_id):
         response.raise_for_status() # Raise an exception for HTTP errors
         all_odds = response.json() # Parse the JSON response
     
+    except requests.exceptions.HTTPError as http_err:
+        log_step("ODDS_API", "FAILURE", f"HTTP error occurred for {sport_key} - {match_id}: {http_err}") # Log HTTP errors
+        return None # Return None if there was an error fetching odds for the match
+    except requests.exceptions.RequestException as req_err:
+        log_step("ODDS_API", "FAILURE", f"Request error occurred for {sport_key} - {match_id}: {req_err}") # Log request errors
+        return None # Return None if there was an error fetching odds for the match
     except Exception as e:
         log_step("ODDS_API", "FAILURE", f"Unexpected Error: {sport_key} - {match_id}: {e}") # Log any errors that occur while fetching odds
         return None # Return None if there was an error fetching odds for the match 
+    
