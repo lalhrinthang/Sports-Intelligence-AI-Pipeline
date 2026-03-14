@@ -1,3 +1,4 @@
+import decimal
 import os
 import requests
 from dotenv import load_dotenv
@@ -45,3 +46,22 @@ def get_upcoming_matches():
             log_step("ODDS_API", "FAILURE", f"Unexpected Error: {sport_key}: {e}") # Log any errors that occur while fetching matches
             
     return all_matches # Return the list of all upcoming matches across the specified sports    
+
+def get_match_odds(sport_key, match_id):
+    """Fetch odds for a specific match."""
+    try:
+        url = f"{BASE_URL}/sports/{sport_key}/odds"
+        
+        params = {
+            "apiKey": API_KEY,
+            "regions": "eu", # Specify regions if needed 
+            "markets": "h2h", # Specify markets if needed
+            "oddsFormat": "decimal" # Specify odds format if needed
+        }
+        response = requests.get(url, params=params,timeout=10) #add timeout to prevent hanging
+        response.raise_for_status() # Raise an exception for HTTP errors
+        all_odds = response.json() # Parse the JSON response
+    
+    except Exception as e:
+        log_step("ODDS_API", "FAILURE", f"Unexpected Error: {sport_key} - {match_id}: {e}") # Log any errors that occur while fetching odds
+        return None # Return None if there was an error fetching odds for the match 
