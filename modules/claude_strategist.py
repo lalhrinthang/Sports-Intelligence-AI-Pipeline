@@ -109,8 +109,46 @@ def run_v3_audit(validated_data: MatchData):
     except Exception as e:
         log_step("CLAUDE", "FAILURE", f"Claude API error: {e}")
         return None
-        
-        
+    
+def run_v3_audit_sonnet_fallback(
+        validated_data: MatchIntelligence) -> dict | None:
+    """
+    Fallback to Claude Sonnet if Haiku fails.
+    More affordable but less reliable.
+    """
+
+    log_step("CLAUDE", "FALLBACK",
+             "Sonnet failed — trying Claude Haiku...")
+
+    prompt = load_prompt(validated_data)
+    if not prompt:
+        return None
+
+    try:
+        response = client.messages.create(
+            model="claude-sonnet-4-6",
+            max_tokens=1024,
+            messages=[
+                {
+                    "role": "user",
+                    "content": prompt
+                }
+            ]
+        )
+
+        raw_text = response.content[0].text.strip()
+        cleaned = clean_json_response(raw_text)
+        verdict_data = json.loads(cleaned)
+
+        log_step("CLAUDE", "SONNET_SUCCESS",
+                 f"Sonnet verdict: {verdict_data.get('verdict')}")
+
+        return verdict_data
+
+    except Exception as e:
+        log_step("CLAUDE", "TOTAL_FAILURE",
+                 f"Both Sonnet and Haiku failed: {e}")
+        return None      
         
 def clean_json_response(text: str) -> str:
     """Strip markdown code fences if present."""
