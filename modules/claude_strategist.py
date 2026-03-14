@@ -86,6 +86,29 @@ def run_v3_audit(validated_data: MatchData):
         cleaned_text = clean_json_response(raw_text)
         verdict_data = json.loads(cleaned_text)
         
+        # make sure we have all the expected fields
+        required_fields = ["match_id","verdict","reason","confidence"]
+        
+        for field in required_fields:
+            if field not in verdict_data:
+                log_step("CLAUDE", "FAILED", f"Missing field in response: {field}")
+                
+                raise ValueError(f"Missing field in response: {field}")
+        log_step("CLAUDE", "SUCCESS",
+                 f"Verdict: {verdict_data['verdict']} | "
+                 f"Confidence: {verdict_data['confidence']}%")
+        
+        return verdict_data
+    
+    except json.JSONDecodeError as e:
+        log_step("CLAUDE", "FAILURE",
+                 f"Claude returned invalid JSON: {e}")
+        return run_v3_audit_sonnet_fallback(validated_data)  # Try the fallback if JSON parsing fails 
+    
+        # Fallback can use sonnet or opus model, this is optional to change
+    except Exception as e:
+        log_step("CLAUDE", "FAILURE", f"Claude API error: {e}")
+        return None
         
         
         
