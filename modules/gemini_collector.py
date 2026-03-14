@@ -34,7 +34,7 @@ def load_prompt(match_data: dict) -> str:
 # Main function to collect insights for a match
 def collect_match_insights(match_data:dict) -> dict | None: 
         """
-        Send match data to Gemini Pro.
+        Send match data to Gemini.
         Gemini searches the web and returns a rich JSON.
 
         Returns: dict if successful, None if anything fails.
@@ -54,19 +54,19 @@ def collect_match_insights(match_data:dict) -> dict | None:
             google_search_tool = types.Tool(
                 google_search = types.GoogleSearch()
             )
-            model = client.models.generate_content(
-                "gemini-2.5-flash", 
-                tools=[google_search_tool], 
+            log_step("GEMINI", "CALLING API", "Sending prompt to gemini 2.5 flash API with Google Search tool enabled")
+            
+            response = client.models.generate_content(
+                model="gemini-2.5-flash", 
+                contents=prompt,
                 config=types.GenerateContentConfig(
                     tools=[google_search_tool],  
                     thinking_config=types.ThinkingConfig(thinking_budget=1024)
                 )
             )
+            # response = model.generate_content(prompt)
             
-            log_step("GEMINI", "CALLING API", "Sending prompt to Gemini Pro API")
-            # Send the prompt to Gemini Pro and get the response
-            response = model.generate_content(prompt)
-            log_step("GEMINI", "API RESPONSE RECEIVED", "Received response from Gemini Pro API")
+            log_step("GEMINI", "API RESPONSE RECEIVED", "Received response from Gemini API")
             
             # Extract the JSON content from the response
             raw_text = response.text.strip()
