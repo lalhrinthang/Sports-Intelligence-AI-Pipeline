@@ -43,22 +43,42 @@ def process_match(match: dict):
     log_step("PIPELINE","STEP-2",f"Validating Gemini insights for {home_team} vs {away_team}")
     
     result = validate_match_data(intelligence)
-    #unpcak the result of validation
-    validated = result[0]
-    error = result[1]
-    
+    # Safely unpack — validate_intelligence always returns tuple
+    if not isinstance(result, tuple) or len(result) != 2:
+        error_msg = "Validator returned unexpected format"
+        log_step("PIPELINE", "FAILURE", error_msg)
+        send_pipeline_failure("PYDANTIC_VALIDATOR", error_msg)
+        return
+
+    validated, error = result
     if validated is None:
         # Validation failed — alert and stop
         log_step("PIPELINE", "FAILURE", f"Validation failed: {error}")
         send_pipeline_failure("PYDANTIC_VALIDATOR", str(error))
         return
-    # If we reach this point, validation passed and we have a validated object to work with
+    
+    # Extra safety check — confirm it's actually a Pydantic object
+    if isinstance(validated, dict):
+        error_msg = (
+            "Validator returned a dict instead of "
+            "Pydantic object — check validate_intelligence()"
+        )
+        log_step("PIPELINE", "FAILURE", error_msg)
+        send_pipeline_failure("PYDANTIC_VALIDATOR", error_msg)
+        return
+
     log_step("PIPELINE", "VALIDATED",
              f"Data clean for: {validated.match_id}")
-    # Step 3: Run Claude audit to get verdict, confidence, and reason
-    log_step("PIPELINE","STEP-3",f"Running Claude audit for {home_team} vs {away_team}")
     
+    # Step 3: Run Claude audit to get verdict, confidence, and reason
+    log_step("PIPELINE","STEP-3",
+             f"Running Claude audit for "
+             f"{home_team} vs {away_team}")
+    # Log the type before sending — confirms it's Pydantic
+    log_step("PIPELINE", "DEBUG",
+             f"Type going into Claude: {type(validated).__name__}")
     verdict_data = run_v3_audit(intelligence)
+    
     if not verdict_data:
         error_msg = f"Claude audit failed for match {match_id}"
         log_step("PIPELINE", "FAILURE", error_msg)
@@ -72,6 +92,8 @@ def process_match(match: dict):
         reason=verdict_data["reason"],
         confidence=verdict_data["confidence"],
         match_id=match_id,
+        home_team=home_team,
+        away_team=away_team
     )
     
     log_step("PIPELINE", "COMPLETE",
