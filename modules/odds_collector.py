@@ -11,7 +11,7 @@ BASE_URL = "https://api.the-odds-api.com/v4/" # Base URL for the Odds API
 
 # Which sports to collect odds for? Use the API endpoint to get the list of supported sports and their keys.
 
-SPORTS_TO_WATCH = ["soccer_epl", "soccer_uefa_champs_league","soccer_spain_la_liga","soccer_germany_bundesliga","soccer_italy_serie_a"] # List of sport keys to watch (e.g., soccer_epl for English Premier League)
+SPORTS_TO_WATCH = ["soccer_epl", "soccer_uefa_champs_league","soccer_spain_la_liga","soccer_germany_bundesliga","soccer_italy_serie_a","soccer_france_ligue_one"] # List of sport keys to watch (e.g., soccer_epl for English Premier League)
 
 def get_upcoming_matches():
     """Fetch upcoming matches for the specified sports."""

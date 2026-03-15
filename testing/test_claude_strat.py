@@ -1,6 +1,10 @@
+import os
+import sys
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from validator import validate_match_data
 from modules.claude_strategist import run_v3_audit
 from modules.telegram_bot import send_pipeline_failure, send_intelligence_report
+from modules.gemini_collector import collect_match_insights
 
 print("=" * 50)
 print("TEST 1: Valid data — should PASS validator")
@@ -38,6 +42,18 @@ good_data = {
     )
 }
 
+# Step 1: Get Gemini output
+intelligence = collect_match_insights(good_data)
+
+# DEBUG — print EXACTLY what Gemini returned
+print("\n===== RAW GEMINI OUTPUT =====")
+print(intelligence)
+print("\n===== FIELD NAMES ONLY =====")
+if isinstance(intelligence, dict):
+    for key in intelligence.keys():
+        print(f"  '{key}'")
+else:
+    print(f"Not a dict! Got: {type(intelligence)}")
 validated, error = validate_match_data(good_data)
 
 if validated:

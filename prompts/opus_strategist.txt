@@ -15,7 +15,7 @@ Examine the lineups and injury report. Are key players missing?
 Does one team have a significant advantage due to absences?
 
 PILLAR 2 — MARKET SIGNAL:
-Analyze the odds movement. Is there a "steam move" (sharp money)?
+Analyze the odds_movement. Is there a "steam move" (sharp money)?
 A sharp move of 10%+ in one direction is a strong signal.
 
 PILLAR 3 — CONDITIONS:

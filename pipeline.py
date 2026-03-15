@@ -17,7 +17,7 @@ def process_match(match: dict):
 
     # Extract basic info
     match_id   = match.get("id", "unknown")
-    sport_key  = match.get("sport_key", "unknown")
+    sport_key  = match.get("sport_key", "unknown") # we can use this to filter for soccer matches only if needed
     home_team  = match.get("home_team", "Unknown")
     away_team  = match.get("away_team", "Unknown")
     start_time = match.get("commence_time", "Unknown")
@@ -39,16 +39,23 @@ def process_match(match: dict):
         send_pipeline_failure("GEMINI_COLLECTOR", error_msg)
         return   # Stop here — do not call Claude
     
+    # Step - 2 : Pydantic validation of Gemini's insights
     log_step("PIPELINE","STEP-2",f"Validating Gemini insights for {home_team} vs {away_team}")
     
-    validate, error = validate_match_data(intelligence)
+    result = validate_match_data(intelligence)
+    #unpcak the result of validation
+    validated = result[0]
+    error = result[1]
     
-    if not validate:
-        error_msg = f"Validation failed for {home_team} vs {away_team}: {error}"
-        log_step("PIPELINE", "FAILURE", error_msg)
-        send_pipeline_failure("PYDANTIC_VALIDATOR", error_msg)
-        return   # Stop here — do not call Claude
-    
+    if validated is None:
+        # Validation failed — alert and stop
+        log_step("PIPELINE", "FAILURE", f"Validation failed: {error}")
+        send_pipeline_failure("PYDANTIC_VALIDATOR", str(error))
+        return
+    # If we reach this point, validation passed and we have a validated object to work with
+    log_step("PIPELINE", "VALIDATED",
+             f"Data clean for: {validated.match_id}")
+    # Step 3: Run Claude audit to get verdict, confidence, and reason
     log_step("PIPELINE","STEP-3",f"Running Claude audit for {home_team} vs {away_team}")
     
     verdict_data = run_v3_audit(intelligence)
@@ -57,7 +64,7 @@ def process_match(match: dict):
         log_step("PIPELINE", "FAILURE", error_msg)
         send_pipeline_failure("CLAUDE_STRATEGIST", error_msg)
         return   # Stop here — do not save to database
-    
+    # Step 4: Save verdict to database and send Telegram report
     log_step("PIPELINE","STEP-4",f"Sending intelligence report to Telegram for match {match_id}")
     
     send_intelligence_report(
@@ -71,3 +78,19 @@ def process_match(match: dict):
              f"Done: {home_team} vs {away_team} | "
              f"Verdict: {verdict_data['verdict']} | "
              f"Confidence: {verdict_data['confidence']}%")
+    # ── Step 5: Save to database ─────────────────────────
+    log_step("PIPELINE", "STEP_5", "Saving to database...")
+
+    save_verdict(
+        match_id=match_id,
+        home=home_team,
+        away=away_team,
+        verdict=verdict_data.get("verdict", "Unknown"),
+        confidence=verdict_data.get("confidence", 0),
+        reason=verdict_data.get("reason", "")
+    )
+
+    log_step("PIPELINE", "COMPLETE",
+             f"Done: {home_team} vs {away_team} | "
+             f"Verdict: {verdict_data.get('verdict')} | "
+             f"Confidence: {verdict_data.get('confidence')}%")

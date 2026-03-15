@@ -20,7 +20,6 @@ def init_db():
                 match_id TEXT UNIQUE NOT NULL,
                 home_team TEXT,
                 away_team TEXT,
-                recent_form TEXT,
                 verdict TEXT,
                 confidence INTEGER,
                 reason TEXT,
@@ -53,7 +52,7 @@ def is_match_processed(match_id: str) -> bool:
         return False
 
 # This function is called after we get Claude's verdict and want to save it to the database.
-def save_verdict(match_id, home, away, recent_form, verdict, confidence, reason):
+def save_verdict(match_id, home, away, verdict, confidence, reason):
     """
     Save Claude's verdict to the database after processing.
     """
@@ -63,9 +62,9 @@ def save_verdict(match_id, home, away, recent_form, verdict, confidence, reason)
 
         cursor.execute("""
             INSERT OR IGNORE INTO processed_matches
-            (match_id, home_team, away_team, recent_form, verdict, confidence, reason)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-        """, (match_id, home, away, recent_form, verdict, confidence, reason))
+            (match_id, home_team, away_team, verdict, confidence, reason)
+            VALUES (?, ?, ?, ?, ?, ?)
+        """, (match_id, home, away, verdict, confidence, reason))
 
         conn.commit()
         conn.close()

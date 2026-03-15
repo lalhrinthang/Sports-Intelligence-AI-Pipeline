@@ -10,14 +10,14 @@ from modules.telegram_bot import send_alert
 
 #need schedule to run a function every X minutes that checks for matches starting in the next 15 minutes, then calls process_match for each one
 
-def run__schedule_check():
+def run_schedule_check():
     """
     Called every 60 seconds by the scheduler loop.
     Checks for upcoming matches and triggers the pipeline.
     """
     log_step("MAIN","HEARTBEAT",f"Checking schedule at " f"{datetime.now().strftime('%H:%M:%S')}")
-    
-    upcoming = get_matches_starting_soon(window_minutes=15)
+    # Change  ==> 15 min
+    upcoming = get_matches_starting_soon(window_minutes=30) # Check for matches starting in the next 30 minutes
     
     if not upcoming:
         log_step("MAIN","IDLE",f"No matches starting in the next 15 minutes.")
@@ -67,7 +67,7 @@ def main():
     log_step("MAIN", "STARTED", "Pipeline started successfully. Entering main loop.")
     
     #repeat every 60 seconds
-    schedule.every(60).seconds.do(run__schedule_check)
+    schedule.every(60).seconds.do(run_schedule_check)
     
     log_step("MAIN", "SCHEDULER", "Entering main loop")
     

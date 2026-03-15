@@ -11,7 +11,6 @@ class MatchData(BaseModel):
     match_id: str
     lineups_injuries: str
     odds_movements: str
-    recent_form: str
     weather: str
     public_sentiment: str
     
@@ -38,8 +37,12 @@ def validate_match_data(raw_data: dict):
         (None, error_string)        → if FAIL
         
     """
-    log_step("VALIDATION","RUNNING", f"Checking {len(raw_data)} fieldss for match data validity")
-    
+    log_step("VALIDATION","RUNNING", f"Checking {len(raw_data)} fields for match data validity")
+    # Guard: make sure input is actually a dict
+    if not isinstance(raw_data, dict):
+        error = f"Expected dict, got {type(raw_data).__name__}"
+        log_step("VALIDATOR", "FAILURE", error)
+        return None, error
     try:
         validated = MatchData(**raw_data)
         
