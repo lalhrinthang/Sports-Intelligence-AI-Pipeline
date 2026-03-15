@@ -75,7 +75,7 @@ def main():
         try:
             schedule.run_pending() # Run any scheduled tasks that are due
             time.sleep(1) # Sleep briefly to avoid busy-waiting
-        except KeyboardInterrupt
+        except KeyboardInterrupt:
             log_step("MAIN", "STOPPED", "Stopped by user (Ctrl+C)")
             send_alert("🔴 <b>Pipeline stopped</b> — manual shutdown.")
             break

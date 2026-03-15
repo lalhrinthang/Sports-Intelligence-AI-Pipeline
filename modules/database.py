@@ -29,10 +29,11 @@ def init_db():
         """)
         
         conn.commit()
-        log_step("Database initialized successfully.")
+        log_step("DATABASE", "SUCCESS", f"Database file: {DB_PATH}")
         conn.close()
     except Exception as e:
-        log_step(f"DATABASE ERROR","FAILURE",f"Could not initialize database: {e}")
+        log_step("DATABASE", "FAILURE", f"Could not initialize database: {e}")
+
 def is_match_processed(match_id: str) -> bool:
     """
     Check if a match has already been processed.
@@ -48,7 +49,7 @@ def is_match_processed(match_id: str) -> bool:
         
         return result is not None #TRUE if match_id exists, FALSE if not
     except Exception as e:
-        log_step(f"DATABASE ERROR","FAILURE",f"Could not check match: {e}")
+        log_step("DATABASE", "FAILURE", f"Could not check match: {e}")
         return False
 
 # This function is called after we get Claude's verdict and want to save it to the database.
