@@ -50,3 +50,27 @@ def is_match_processed(match_id: str) -> bool:
     except Exception as e:
         log_step(f"DATABASE ERROR","FAILURE",f"Could not check match: {e}")
         return False
+
+# This function is called after we get Claude's verdict and want to save it to the database.
+def save_verdict(match_id, home, away, recent_form, verdict, confidence, reason):
+    """
+    Save Claude's verdict to the database after processing.
+    """
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+
+        cursor.execute("""
+            INSERT OR IGNORE INTO processed_matches
+            (match_id, home_team, away_team, recent_form, verdict, confidence, reason)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        """, (match_id, home, away, recent_form, verdict, confidence, reason))
+
+        conn.commit()
+        conn.close()
+
+        log_step("DATABASE", "SUCCESS",
+                 f"Saved verdict for match {match_id}")
+
+    except Exception as e:
+        log_step("DATABASE", "FAILURE", f"Could not save verdict: {e}")
