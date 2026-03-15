@@ -54,3 +54,42 @@ def main():
     print("   V3 SYNDICATE AUTOMATION PIPELINE")
     print("=" * 55)
     
+    #initialize the database (creates tables if they don't exist)
+    init_db()
+    
+    # alert that the pipeline has started successfully
+    send_alert(
+        "🟢 <b>V3 Syndicate Pipeline Started</b>\n"
+        "Monitoring match schedule every 60 seconds.\n"
+        f"Started at: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+    )
+    
+    log_step("MAIN", "STARTED", "Pipeline started successfully. Entering main loop.")
+    
+    #repeat every 60 seconds
+    schedule.every(60).seconds.do(run__schedule_check)
+    
+    log_step("MAIN", "SCHEDULER", "Entering main loop")
+    
+    while True:
+        try:
+            schedule.run_pending() # Run any scheduled tasks that are due
+            time.sleep(1) # Sleep briefly to avoid busy-waiting
+        except KeyboardInterrupt
+            log_step("MAIN", "STOPPED", "Stopped by user (Ctrl+C)")
+            send_alert("🔴 <b>Pipeline stopped</b> — manual shutdown.")
+            break
+        except Exception as e:
+            # Unexpected crash — log, alert, and keep going
+            log_step("MAIN", "CRASH",
+                     f"Main loop error: {e}")
+            send_alert(
+                f"🔴 <b>Pipeline crash</b>\n"
+                f"Error: {str(e)[:300]}\n"
+                f"Restarting loop in 30 seconds..."
+            )
+            time.sleep(30)   # Wait before retrying
+
+
+if __name__ == "__main__":
+    main()
