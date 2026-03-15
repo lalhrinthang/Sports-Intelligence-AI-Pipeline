@@ -1,4 +1,3 @@
-import decimal
 import os
 import requests
 from dotenv import load_dotenv
@@ -10,8 +9,9 @@ API_KEY = os.getenv('ODDS_API_KEY') # Get the Odds API key from environment vari
 BASE_URL = "https://api.the-odds-api.com/v4/" # Base URL for the Odds API
 
 # Which sports to collect odds for? Use the API endpoint to get the list of supported sports and their keys.
+SPORTS_TO_WATCH = ["soccer_epl"]
 
-SPORTS_TO_WATCH = ["soccer_epl", "soccer_uefa_champs_league","soccer_spain_la_liga","soccer_germany_bundesliga","soccer_italy_serie_a","soccer_france_ligue_one"] # List of sport keys to watch (e.g., soccer_epl for English Premier League)
+# SPORTS_TO_WATCH = ["soccer_epl", "soccer_uefa_champs_league","soccer_spain_la_liga","soccer_germany_bundesliga","soccer_italy_serie_a","soccer_france_ligue_one"] # List of sport keys to watch (e.g., soccer_epl for English Premier League)
 
 def get_upcoming_matches():
     """Fetch upcoming matches for the specified sports."""
@@ -23,7 +23,6 @@ def get_upcoming_matches():
             
             params = {
                 "apiKey": API_KEY,
-                #@ Todo: Add more parameters as needed (e.g., regions, markets, oddsFormat)
             }
             response = requests.get(url, params=params,timeout=10) #add timeout to prevent hanging
             
@@ -31,21 +30,31 @@ def get_upcoming_matches():
             matches = response.json() # Parse the JSON response
             
             log_step("ODDS_API", "SUCCESS", f"Got {len(matches)} matches for {sport_key}") # Log the successful fetching of matches
-            all_matches.extend(matches) # Add the matches to the overall list
+            all_matches.extend(matches)
             
-        except requests.exceptions.HTTPError as http_err:
-            log_step("ODDS_API", "FAILURE", f"HTTP error occurred for {sport_key}: {http_err}") # Log HTTP errors
-            
-        except requests.exceptions.RequestException as req_err:
-            log_step("ODDS_API", "FAILURE", f"Request error occurred for {sport_key}: {req_err}") # Log request errors (e.g., connection issues, timeouts)
-        
+        except requests.exceptions.HTTPError as e:
+            # 422 means sport key is wrong or not available
+            if response.status_code == 422:
+                log_step("ODDS_API", "FAILURE",
+                         f"Invalid sport key: '{sport_key}' "
+                         f"— check spelling")
+            else:
+                log_step("ODDS_API", "FAILURE",
+                         f"HTTP {response.status_code} "
+                         f"for {sport_key}: {e}")
+
         except requests.exceptions.ConnectionError:
-            log_step("ODDS_API","FAILURE", "No Internet Connection")
-            
+            log_step("ODDS_API", "FAILURE",
+                     "No internet connection")
+
         except Exception as e:
-            log_step("ODDS_API", "FAILURE", f"Unexpected Error: {sport_key}: {e}") # Log any errors that occur while fetching matches
-            
-    return all_matches # Return the list of all upcoming matches across the specified sports    
+            log_step("ODDS_API", "FAILURE",
+                     f"Unexpected error for {sport_key}: {e}")
+
+    log_step("ODDS_API", "TOTAL",
+             f"Total matches across all sports: {len(all_matches)}")
+
+    return all_matches
 
 def get_match_odds(sport_key, match_id):
     """Fetch odds for a specific match."""

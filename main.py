@@ -17,7 +17,7 @@ def run_schedule_check():
     """
     log_step("MAIN","HEARTBEAT",f"Checking schedule at " f"{datetime.now().strftime('%H:%M:%S')}")
     # Change  ==> 15 min
-    upcoming = get_matches_starting_soon(window_minutes=30) # Check for matches starting in the next 30 minutes
+    upcoming = get_matches_starting_soon(window_minutes=120) # Check for matches starting in the next 30 minutes
     
     if not upcoming:
         log_step("MAIN","IDLE",f"No matches starting in the next 15 minutes.")

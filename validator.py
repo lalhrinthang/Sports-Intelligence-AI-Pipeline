@@ -10,7 +10,7 @@ from logger import log_step
 class MatchData(BaseModel):
     match_id: str
     lineups_injuries: str
-    odds_movements: str
+    odds_movement: str
     weather: str
     public_sentiment: str
     

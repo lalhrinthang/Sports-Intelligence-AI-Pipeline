@@ -20,7 +20,7 @@ good_data = {
         "De Bruyne, Bernardo, Kovacic; Doku, Haaland, Foden. "
         "Rodri OUT (ACL)."
     ),
-    "odds_movements": (
+    "odds_movement": (
         "Arsenal opened 2.40, now 2.10 — steam move detected. "
         "Man City drifted from 3.10 to 3.50. "
         "Draw stable at 3.30. Sharp money on Arsenal."
