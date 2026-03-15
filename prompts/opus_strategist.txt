@@ -45,4 +45,4 @@ OUTPUT THIS EXACT JSON SCHEMA:
   "confidence": number — integer between 0 and 100
 }
 
-OUTPUT for reason should be readable format for the user.
+OUTPUT for reason should be readable format for the user.]

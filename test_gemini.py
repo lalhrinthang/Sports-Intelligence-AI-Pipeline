@@ -6,6 +6,7 @@ from modules.gemini_collector import collect_match_insights
 sample_match = {
     "id": "test_match_001",
     "sport_key": "soccer_epl",
+    "recent_form": "Home team has won their last 3 matches.",
     "home_team": "Arsenal",
     "away_team": "Manchester City",
     "commence_time": "2026-03-14T15:00:00Z"
@@ -20,7 +21,7 @@ if result:
     print("SUCCESS! Gemini returned:\n")
     for key, value in result.items():
         print(f"  {key}:")
-        print(f"    {value[:200]}...")  # Show first 100 chars
+        print(f"    {value[:200]}...")  # Show first 200 chars
         print()
 else:
     print("FAILED — check logfile.txt for details")
