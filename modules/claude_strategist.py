@@ -21,18 +21,39 @@ else:
 # Initialize the Anthropic client
 client = anthropic.Anthropic(api_key=api_key)
 
-def load_prompt(validated_data: MatchData):
+def load_prompt(validated_data) -> str:
     """
     Load Claude's prompt from opus_strategist.txt
     and inject the validated intelligence data.
     """
     try:
-        with open("prompts/opus_strategist.txt", "r") as file:
-            prompt_template = file.read()
-        
-        data_dict = validated_data.model_dump()  # Convert MatchData to a dictionary
-        data = json.dumps(data_dict, indent=2)  # Convert dictionary to a pretty-printed JSON string
-        prompt = prompt_template.replace("{intelligence_data}", data) # Inject the JSON string into the prompt template
+        with open("prompts/opus_strategist.txt", "r") as f:
+            template = f.read()
+
+        # ── Convert to dict safely ────────────────────────
+        # Handle Pydantic v2
+        if hasattr(validated_data, "model_dump"):
+            data_dict = validated_data.model_dump()
+
+        # Handle Pydantic v1
+        elif hasattr(validated_data, "dict"):
+            data_dict = validated_data.dict()
+
+        # Already a dict — use directly
+        elif isinstance(validated_data, dict):
+            data_dict = validated_data
+
+        # Unknown type — log and fail safely
+        else:
+            log_step("CLAUDE", "FAILURE",
+                     f"Unknown data type: {type(validated_data)}")
+            return None
+
+        data_str = json.dumps(data_dict, indent=2)
+        prompt   = template.replace("{intelligence_data}", data_str)
+
+        log_step("CLAUDE", "PROMPT_LOADED",
+                 f"Prompt ready — {len(prompt)} characters")
 
         return prompt
     except FileNotFoundError:
@@ -54,10 +75,19 @@ def run_v3_audit(validated_data: MatchData):
     Returns: dict with verdict, reason, confidence — or None on failure
     """
     
-    match_id = validated_data.match_id
+    # ── Safety check on input ─────────────────────────────
+    # Get match_id safely regardless of object type
+    if hasattr(validated_data, "match_id"):
+        match_id = validated_data.match_id        # Pydantic object
+    elif isinstance(validated_data, dict):
+        match_id = validated_data.get("match_id", "unknown")  # dict
+    else:
+        log_step("CLAUDE", "FAILURE",
+                 f"Invalid input type: {type(validated_data)}")
+        return None
+
     log_step("CLAUDE", "STARTING",
              f"Running V3 Audit for match: {match_id}")
-    
     #Load and prepare the prompt
     prompt = load_prompt(validated_data)
     if not prompt:
@@ -65,7 +95,7 @@ def run_v3_audit(validated_data: MatchData):
         return None
     try:
         # Call the Anthropic API with the prepared prompt
-        log_step("CLAUDE", "RUNNING", "Sending request to Anthropic API...")
+        log_step("CLAUDE", "CALLING_API", "Sending request to Anthropic API...")
         
         response = client.messages.create(
             model="claude-haiku-4-5",
@@ -80,38 +110,43 @@ def run_v3_audit(validated_data: MatchData):
         # Extract and return the relevant information from Claude's response
         raw_text = response.content[0].text.strip()
         
-        log_step("CLAUDE", "RESPONSE_RECEIVED", f"Got {len(raw_text)} characters")
+        log_step("CLAUDE", "RESPONSE_RECEIVED", 
+                 f"Got {len(raw_text)} characters")
         
         # clean and parse the response
         cleaned_text = clean_json_response(raw_text)
         verdict_data = json.loads(cleaned_text)
         
         # make sure we have all the expected fields
-        required_fields = ["match_id","verdict","reason","confidence"]
+        required = ["match_id","verdict","reason","confidence"]
+        missing  = [f for f in required if f not in verdict_data]
         
-        for field in required_fields:
-            if field not in verdict_data:
-                log_step("CLAUDE", "FAILED", f"Missing field in response: {field}")
-                
-                raise ValueError(f"Missing field in response: {field}")
+        if missing:
+            raise ValueError(
+                f"Claude response missing fields: {missing}"
+            )
+
         log_step("CLAUDE", "SUCCESS",
                  f"Verdict: {verdict_data['verdict']} | "
                  f"Confidence: {verdict_data['confidence']}%")
-        
+
         return verdict_data
     
     except json.JSONDecodeError as e:
-        log_step("CLAUDE", "FAILURE",
+        log_step("CLAUDE", "HAIKU_FAILED",
                  f"Claude returned invalid JSON: {e}")
         return run_v3_audit_sonnet_fallback(validated_data)  # Try the fallback if JSON parsing fails 
-    
+    except ValueError as e:
+        log_step("CLAUDE", "HAIKU_FAILED",
+                 f"Missing fields from Haiku: {e}")
+        return run_v3_audit_sonnet_fallback(validated_data)
+
         # Fallback can use sonnet or opus model, this is optional to change
     except Exception as e:
-        log_step("CLAUDE", "FAILURE", f"Claude API error: {e}")
+        log_step("CLAUDE", "HAIKU_API_ERROR", f"Claude HAIKU API error: {e}")
         return None
     
-def run_v3_audit_sonnet_fallback(
-        validated_data: MatchData) -> dict | None:
+def run_v3_audit_sonnet_fallback(validated_data) -> dict | None:
     """
     Fallback to Claude Sonnet if Haiku fails.
     More affordable but less reliable.
