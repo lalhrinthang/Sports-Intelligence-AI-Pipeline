@@ -28,7 +28,7 @@ def process_match(match: dict):
     if is_match_processed(match_id):
         log_step("PIPELINE","SKIPPED",f"Match {home_team} vs {away_team} already processed. Skipping.")
         return #skip to next match in scheduler loop
-    
+    # Step 1: Run Gemini audit to collect insights
     log_step("PIPELINE","STEP-1",f"Running Gemini audit for ....")
     
     intelligence = collect_match_insights(match)
@@ -38,6 +38,13 @@ def process_match(match: dict):
         log_step("PIPELINE", "FAILURE", error_msg)
         send_pipeline_failure("GEMINI_COLLECTOR", error_msg)
         return   # Stop here — do not call Claude
+    
+    # Verify intelligence is a dict before validation
+    if not isinstance(intelligence, dict):
+        error_msg = f"Gemini returned wrong type: {type(intelligence).__name__} (expected dict)"
+        log_step("PIPELINE", "FAILURE", error_msg)
+        send_pipeline_failure("GEMINI_COLLECTOR", error_msg)
+        return   # Stop here — do not call validator
     
     # Step - 2 : Pydantic validation of Gemini's insights
     log_step("PIPELINE","STEP-2",f"Validating Gemini insights for {home_team} vs {away_team}")
