@@ -12,7 +12,7 @@ from modules.telegram_bot import send_alert
 
 def run_schedule_check():
     """
-    Called every 60 seconds by the scheduler loop.
+    Called every 30 minutes by the scheduler loop.
     Checks for upcoming matches and triggers the pipeline.
     """
     log_step("MAIN","HEARTBEAT",f"Checking schedule at " f"{datetime.now().strftime('%H:%M:%S')}")
@@ -60,14 +60,15 @@ def main():
     # alert that the pipeline has started successfully
     send_alert(
         "🟢 <b>V3 Syndicate Pipeline Started</b>\n"
-        "Monitoring match schedule every 60 seconds.\n"
+        "Monitoring match schedule every 30 minutes.\n"
         f"Started at: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
     )
     
     log_step("MAIN", "STARTED", "Pipeline started successfully. Entering main loop.")
     
-    #repeat every 60 seconds
-    schedule.every(60).seconds.do(run_schedule_check)
+    #repeat every 60 seconds for testing purpose
+    # 30 minutes in production to check for matches starting in the next 15 minutes
+    schedule.every(1800).seconds.do(run_schedule_check)
     
     log_step("MAIN", "SCHEDULER", "Entering main loop")
     
