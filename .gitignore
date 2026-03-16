@@ -1,6 +1,36 @@
+# ─────────────────────────────────────────────────────
+# V3 Syndicate Pipeline — .gitignore
+# ─────────────────────────────────────────────────────
+
+# Environment variables — NEVER commit this
 .env
+
+# Virtual environment
 venv/
+env/
+.venv/
+
+# Python cache
 __pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Logs and database — auto-generated at runtime
 logfile.txt
-testing/
 syndicate.db
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Test cache
+.pytest_cache/
+.coverage
+htmlcov/
